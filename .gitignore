@@ -1,0 +1,7 @@
+# ignore node_modules
+node_modules/
+
+# Ignore IMP files
+*.env
+*.cert
+*.key
