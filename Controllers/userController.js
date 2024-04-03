@@ -1,49 +1,23 @@
 const Errorhandler = require("../Utils/errorHandler");
 const catchAsyncErrors = require("../Middleware/catchAsyncError");
-// const User = require("../Models/userModel");
+const User = require("../Models/userModel");
 const sendToken = require("../Utils/jwtToken");
-const { getClientToken, createTransmitUser, loginTransmitUser } = require("./clientController");
+const {
+  getClientToken,
+  createTransmitUser,
+  loginTransmitUser,
+} = require("./clientController");
 
 // Register User
 exports.registerUser = catchAsyncErrors(async (req, res, next) => {
-  //   console.log("Received request:", req.body);
-  const {
-    email,
-    username,
-    usertype,
-    password,
-    phone_number,
-    first_name,
-    last_name,
-    country,
-  } = req.body;
-  const newUser = {
-    username: username,
-    name: {
-      first_name: first_name,
-      last_name: last_name,
-    },
 
-    phone_number: phone_number,
-
-    address: {
-      country: country,
-    },
-
-    email: email,
-    credentials: {
-      password: password,
-      force_replace: false,
-    },
-    custom_data: {
-      usertype: usertype,
-    },
-  };
+  const new_user = new User(req.body);
+  await new_user.validate();
   const token = await getClientToken();
-  const resp = await createTransmitUser(token, newUser);
+  const resp = await createTransmitUser(token, new_user);
   const data = await resp.json();
 
-  //   console.log("Response from API:", data);
+  console.log("Response from API:", data);
 
   res.status(resp.status).json({ success: true, data });
 });
