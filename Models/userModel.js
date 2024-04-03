@@ -1,8 +1,15 @@
 const validator = require("validator");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 
-const userSchema = {
+const userSchema = new mongoose.Schema({
+  username: {
+    type: String,
+    required: [true, "Please Enter Your Username"],
+    unique: true,
+    minLength: [4, "Username should have more than 1 characters"],
+  },
   name: {
     first_name: {
       type: String,
@@ -40,13 +47,19 @@ const userSchema = {
       type: String,
       required: [true, "Please Enter Your Password"],
       minLength: [8, "Password should be greater than 8 characters"],
+      validate:[validator.isStrongPassword,"Password should be greater than 8 characters, contain a lowercase letter, a uppercase letter and a special character"],
       select: false,
     },
+    force_replace: { type: Boolean, default: false },
   },
   custom_data: {
     usertype: { type: String, default: "user" },
   },
-};
+},{ _id: false });
+
+userSchema.set('strict', 'throw');
+const User = mongoose.model('User', userSchema);
+module.exports = User;
 
 // // Hashing Password
 // userSchema.pre("save", async function (next) {
