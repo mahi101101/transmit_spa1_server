@@ -2,7 +2,7 @@ const Errorhandler = require("../Utils/errorHandler");
 const catchAsyncErrors = require("../Middleware/catchAsyncError");
 // const User = require("../Models/userModel");
 const sendToken = require("../Utils/jwtToken");
-const { getClientToken, createTransmitUser } = require("./clientController");
+const { getClientToken, createTransmitUser, loginTransmitUser } = require("./clientController");
 
 // Register User
 exports.registerUser = catchAsyncErrors(async (req, res, next) => {
@@ -33,6 +33,7 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
     email: email,
     credentials: {
       password: password,
+      force_replace: false,
     },
     custom_data: {
       usertype: usertype,
@@ -48,7 +49,19 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
 });
 
 // Login User
-exports.loginUser = catchAsyncErrors(async (req, res, next) => {});
+exports.loginUser = catchAsyncErrors(async (req, res, next) => {
+  const { username, password } = req.body;
+
+  const new_user = {
+    username: username,
+    password: password,
+  };
+  const token = await getClientToken();
+  const resp = await loginTransmitUser(token, new_user);
+
+  const data = await resp.json();
+  res.status(resp.status).json({ success: true, data });
+});
 
 // Logout User
 exports.logoutUser = catchAsyncErrors(async (req, res, next) => {});
