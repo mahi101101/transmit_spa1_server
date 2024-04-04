@@ -13,11 +13,12 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
 
   const new_user = new User(req.body);
   await new_user.validate();
+  
   const token = await getClientToken();
   const resp = await createTransmitUser(token, new_user);
   const data = await resp.json();
 
-  console.log("Response from API:", data);
+  // console.log("Response from API:", data);
 
   res.status(resp.status).json({ success: true, data });
 });
