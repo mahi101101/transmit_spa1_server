@@ -90,3 +90,19 @@ exports.validateEmailPasscode = async (token, email, passcode) => {
 
   return resp;
 };
+
+// Get User By Email
+exports.getUserByEmail = async (token, email) => {
+  const resp = await fetch(
+    `https://api.transmitsecurity.io/cis/v1/users/email/${email}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return resp;
+};
