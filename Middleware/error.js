@@ -12,6 +12,6 @@ module.exports = (err, req, res, next) => {
 
   res.status(err.statusCode).json({
     success: false,
-    error: err.message, // Change to err.stack or err.message
+    data: { message: err.message }, // Change to err.stack or err.message
   });
 };

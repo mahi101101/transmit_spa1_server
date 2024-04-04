@@ -58,6 +58,10 @@ const userSchema = new mongoose.Schema(
       force_replace: { type: Boolean, default: false },
     },
     custom_data: {
+      termsAndConditions: {
+        type: Boolean,
+        required: [true, "Missing Consent for Terms and Conditions"],
+      },
       usertype: { type: String, default: "user" },
     },
   },

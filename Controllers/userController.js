@@ -8,6 +8,7 @@ const {
   loginTransmitUser,
   sendEmailVerificationClient,
   validateEmailPasscode,
+  getUserByEmail,
 } = require("./clientController");
 
 // Register User
@@ -88,11 +89,21 @@ exports.emailValidation = catchAsyncErrors(async (req, res, next) => {
       .status(data.error_code)
       .json({ message: "Email verification failed", data });
   }
-  res.status(200).json({ message: "Email varified succusfully", data });
+  res.status(200).json({ message: "Email verified sucessfully", data });
 });
 
-// Get User Details
-exports.getUserDetails = catchAsyncErrors(async (req, res, next) => {});
+// Get User Details - email
+exports.getUserDetailsEmail = catchAsyncErrors(async (req, res, next) => {
+  const email = req.params.mail;
+  const token = await getClientToken();
+  const resp = await getUserByEmail(token, email);
+  const data = await resp.json();
+
+  res.status(200).json({ message: "Fetched User Details Successfully", data });
+});
+
+// Get User Details - username
+exports.getUserDetailsUsername = catchAsyncErrors(async (req, res, next) => {});
 
 // Get Login History
 exports.getLoginHistory = catchAsyncErrors(async (req, res, next) => {});
