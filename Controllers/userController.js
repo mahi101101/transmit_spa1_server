@@ -12,9 +12,9 @@ const {
 
 // Register User
 exports.registerUser = catchAsyncErrors(async (req, res, next) => {
+
   const new_user = new User(req.body);
   await new_user.validate();
-
   const token = await getClientToken();
   const resp = await createTransmitUser(token, new_user);
   const data = await resp.json();
