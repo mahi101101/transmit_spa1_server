@@ -47,3 +47,46 @@ exports.loginTransmitUser = async (token, user) => {
 
   return resp;
 };
+
+// send email verification mail
+exports.sendEmailVerificationClient = async (token, email) => {
+  const resp = await fetch(
+    `https://api.transmitsecurity.io/cis/v1/auth/otp/email`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        email: email,
+        create_new_user: true,
+        redirect_uri: "http://localhost:8080/redirect",
+      }),
+    }
+  );
+  return resp;
+};
+
+// Validate email Passcode
+exports.validateEmailPasscode = async (token, email, passcode) => {
+  // console.log(typeof passcode);
+  const resp = await fetch(
+    `https://api.transmitsecurity.io/cis/v1/auth/otp/email/validation`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        email: email,
+        passcode: passcode,
+        response_type: "code",
+        nonce: "string",
+      }),
+    }
+  );
+
+  return resp;
+};

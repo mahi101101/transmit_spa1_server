@@ -6,14 +6,15 @@ const {
   getClientToken,
   createTransmitUser,
   loginTransmitUser,
+  sendEmailVerificationClient,
+  validateEmailPasscode,
 } = require("./clientController");
 
 // Register User
 exports.registerUser = catchAsyncErrors(async (req, res, next) => {
-
   const new_user = new User(req.body);
   await new_user.validate();
-  
+
   const token = await getClientToken();
   const resp = await createTransmitUser(token, new_user);
   const data = await resp.json();
@@ -47,8 +48,48 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {});
 // Reset Password
 exports.resetPassword = catchAsyncErrors(async (req, res, next) => {});
 
-// Email Verification
-exports.emailVerification = catchAsyncErrors(async (req, res, next) => {});
+// Send Email for Verification
+exports.sendEmailVerification = catchAsyncErrors(async (req, res, next) => {
+  const { email } = req.body;
+
+  const token = await getClientToken();
+  const resp = await sendEmailVerificationClient(token, email);
+  const data = await resp.json();
+
+  console.log("Email sent: ", data);
+
+  if (!resp.ok) {
+    res.status(response.status).json({ error: "Error sending email" });
+  }
+
+  res.status(resp.status).json({ message: data });
+});
+
+// Redirect
+exports.redirect = catchAsyncErrors(async (req, res, next) => {
+  console.log("Redirecting...", req.body);
+  res.send("Redirecting...");
+});
+
+// Email Validation
+exports.emailValidation = catchAsyncErrors(async (req, res, next) => {
+  const { email, passcode } = req.body;
+
+  if (!passcode) {
+    return new Errorhandler("Passcode is important", 400);
+  }
+  const token = await getClientToken();
+  const resp = await validateEmailPasscode(token, email, passcode);
+  const data = await resp.json();
+
+  console.log(data);
+  if (data.error_code) {
+    res
+      .status(data.error_code)
+      .json({ message: "Email verification failed", data });
+  }
+  res.status(200).json({ message: "Email varified succusfully", data });
+});
 
 // Get User Details
 exports.getUserDetails = catchAsyncErrors(async (req, res, next) => {});
