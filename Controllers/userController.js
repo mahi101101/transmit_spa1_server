@@ -57,7 +57,7 @@ exports.sendEmailVerification = catchAsyncErrors(async (req, res, next) => {
   const resp = await sendEmailVerificationClient(token, email);
   const data = await resp.json();
 
-  console.log("Email sent: ", data);
+  // console.log("Email sent: ", data);
 
   if (!resp.ok) {
     res.status(response.status).json({ error: "Error sending email" });
@@ -68,7 +68,7 @@ exports.sendEmailVerification = catchAsyncErrors(async (req, res, next) => {
 
 // Redirect
 exports.redirect = catchAsyncErrors(async (req, res, next) => {
-  console.log("Redirecting...", req.body);
+  // console.log("Redirecting...", req.body);
   res.send("Redirecting...");
 });
 
@@ -83,7 +83,7 @@ exports.emailValidation = catchAsyncErrors(async (req, res, next) => {
   const resp = await validateEmailPasscode(token, email, passcode);
   const data = await resp.json();
 
-  console.log(data);
+  // console.log(data);
   if (data.error_code) {
     res
       .status(data.error_code)
