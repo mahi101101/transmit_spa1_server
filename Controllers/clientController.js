@@ -106,3 +106,38 @@ exports.getUserByEmail = async (token, email) => {
 
   return resp;
 };
+
+exports.getResetToken = async (username, password) => {
+  const resp = await fetch(`${process.env.RESET_TOKEN_URI}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      password: password,
+      client_id: process.env.CLIENT_ID,
+      username: username,
+    }),
+  });
+
+  return resp;
+};
+
+// reset the password using reset token and new password
+exports.resetThePassword = async (reset_token, new_password) => {
+  const resp = await fetch(
+    "https://api.transmitsecurity.io/cis/v1/auth/password/reset",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        reset_token: reset_token,
+        new_password: new_password,
+      }),
+    }
+  );
+
+  return resp;
+};

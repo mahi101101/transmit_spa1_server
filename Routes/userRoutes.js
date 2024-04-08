@@ -6,6 +6,7 @@ const {
   redirect,
   emailValidation,
   getUserDetailsEmail,
+  resetPassword,
 } = require("../Controllers/userController");
 
 const router = express();
@@ -17,6 +18,8 @@ router.route("/loginuser").post(loginUser);
 router.route("/sendemail").post(sendEmailVerification);
 router.route("/redirect").post(redirect);
 router.route("/validateemail").post(emailValidation);
+
+router.route("/user/resetpassword").post(resetPassword);
 
 router.route("/user/details/email/:mail").get(getUserDetailsEmail);
 

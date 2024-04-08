@@ -9,6 +9,8 @@ const {
   sendEmailVerificationClient,
   validateEmailPasscode,
   getUserByEmail,
+  getResetToken,
+  resetThePassword,
 } = require("./clientController");
 const OtpRequests = new Map();
 const tokenList = new Map();
@@ -73,7 +75,29 @@ exports.logoutUser = catchAsyncErrors(async (req, res, next) => {});
 exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {});
 
 // Reset Password
-exports.resetPassword = catchAsyncErrors(async (req, res, next) => {});
+exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
+  const { username, password, new_password } = req.body;
+  const response = await getResetToken(username, password);
+  const data = await response.json();
+
+  if (!data || !data.result) {
+    return res
+      .status(response.status)
+      .json({ success: false, message: data.message });
+  }
+  console.log("avdkusafdkugsafd");
+  const response2 = await resetThePassword(data.result, new_password);
+  const data2 = await response2.json();
+  console.log(data2);
+
+  if (data2.error_code) {
+    res
+      .status(response2.status)
+      .json({ success: false, message: data2.message.join(", ") });
+  }
+
+  res.status(response2.status).json({ success: true, message: data2.message });
+});
 
 // Send Email for Verification
 exports.sendEmailVerification = catchAsyncErrors(async (req, res, next) => {
