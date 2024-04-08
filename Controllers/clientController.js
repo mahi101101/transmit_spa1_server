@@ -107,6 +107,7 @@ exports.getUserByEmail = async (token, email) => {
   return resp;
 };
 
+// Get a Reset Token for reset password
 exports.getResetToken = async (username, password) => {
   const resp = await fetch(`${process.env.RESET_TOKEN_URI}`, {
     method: "POST",
@@ -139,5 +140,41 @@ exports.resetThePassword = async (reset_token, new_password) => {
     }
   );
 
+  return resp;
+};
+
+// Forgot Pasword
+exports.forgotPassword = async (userId, password, token) => {
+
+  const resp = await fetch(
+    process.env.USER_PASSWORD_RESET_URI + `${userId}/password`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        password: password,
+        force_replace: false,
+      }),
+    }
+  );
+    
+  return resp;
+};
+
+// Get userdetails by username
+exports.getuserdetailsbyusername = async (username, token) => {
+  const resp = await fetch(
+    process.env.USER_DETAILS_BY_USERNAME_URI + `${username}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+    
   return resp;
 };

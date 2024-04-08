@@ -11,6 +11,8 @@ const {
   getUserByEmail,
   getResetToken,
   resetThePassword,
+  getuserdetailsbyusername,
+  forgotPassword,
 } = require("./clientController");
 const OtpRequests = new Map();
 const tokenList = new Map();
@@ -72,7 +74,32 @@ exports.loginUser = catchAsyncErrors(async (req, res, next) => {
 exports.logoutUser = catchAsyncErrors(async (req, res, next) => {});
 
 // Forgot Password
-exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {});
+exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
+  const { username, password } = req.body;
+
+  const token = tokenList.get("accessToken")
+    ? tokenList.get("accessToken")
+    : await getClientToken();
+  if (tokenList.get("accessToken") !== token) {
+    tokenList.set("accessToken", token);
+    setTimeout(() => {
+      OtpRequests.delete(email); // Remove the entry from the cache after expiration
+    }, 60 * 60 * 1000);
+  }
+
+  const userinfo = await getuserdetailsbyusername(username, token);
+  const data = await userinfo.json();
+
+  const userId = data.result.user_id;
+
+  const resp = await forgotPassword(userId, password, token);
+  const data2 = await resp.json();
+
+  if (data2.error_code) {
+    res.status(resp.status).json({ success: false, messege: data2.message });
+  }
+  res.status(resp.status).json({ success: true, message: data2.message });
+});
 
 // Reset Password
 exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
