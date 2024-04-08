@@ -1,6 +1,8 @@
 const Errorhandler = require("../Utils/errorHandler");
 const catchAsyncErrors = require("../Middleware/catchAsyncError");
 const User = require("../Models/userModel");
+const uuid = require("uuid");
+
 const sendToken = require("../Utils/jwtToken");
 const {
   getClientToken,
@@ -16,6 +18,7 @@ const {
 } = require("./clientController");
 const OtpRequests = new Map();
 const tokenList = new Map();
+const regTokens = new Map();
 
 // Register User
 exports.registerUser = catchAsyncErrors(async (req, res, next) => {
@@ -37,6 +40,32 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
   console.log("Response from API:", data);
 
   res.status(resp.status).json({ success: true, message: "User Created" });
+});
+
+// Create Session for user registration
+exports.createRegSession = catchAsyncErrors(async (req, res, next) => {
+  const email = req.params.mail;
+
+  if (regTokens.get(email)) {
+    res.status(401).json({
+      success: false,
+      message:
+        "The user with this mail is already having a session somewhere else please try again.",
+    });
+  }
+
+  const regtoken = uuid.v4();
+
+  regTokens.set(email, regtoken);
+
+  setTimeout(() => {
+    regTokens.delete(email);
+  }, 60 * 60 * 1000);
+
+  res.status(200).json({
+    success: true,
+    message: "Registration session generated",
+  });
 });
 
 // Login User
