@@ -37,7 +37,9 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
   const resp = await createTransmitUser(token, new_user);
   const data = await resp.json();
 
-  console.log("Response from API:", data);
+  if (resp.status !== 201) {
+    res.status(resp.status).json({ success: false, message: data.message });
+  }
 
   res.status(resp.status).json({ success: true, message: "User Created" });
 });
@@ -52,20 +54,20 @@ exports.createRegSession = catchAsyncErrors(async (req, res, next) => {
       message:
         "The user with this mail is already having a session somewhere else please try again.",
     });
+  } else {
+    const regtoken = uuid.v4();
+
+    regTokens.set(email, regtoken);
+
+    setTimeout(() => {
+      regTokens.delete(email);
+    }, 1 * 60 * 1000);
+
+    res.status(200).json({
+      success: true,
+      message: "Registration session generated",
+    });
   }
-
-  const regtoken = uuid.v4();
-
-  regTokens.set(email, regtoken);
-
-  setTimeout(() => {
-    regTokens.delete(email);
-  }, 60 * 60 * 1000);
-
-  res.status(200).json({
-    success: true,
-    message: "Registration session generated",
-  });
 });
 
 // Login User
@@ -253,7 +255,7 @@ exports.getUserDetailsEmail = catchAsyncErrors(async (req, res, next) => {
     });
   }
 
-  res.status(200).json({
+  res.status(resp.status).json({
     success: true,
     message: "Fetched User Details Successfully",
     data,
