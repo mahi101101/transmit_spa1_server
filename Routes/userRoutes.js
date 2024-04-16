@@ -11,6 +11,7 @@ const {
   createRegSession,
   getUserDetailsUsername,
   createForgotPassSession,
+  socialLogin,
 } = require("../Controllers/userController");
 
 const router = express();
@@ -19,8 +20,9 @@ const router = express();
 router.route("/registeruser").post(registerUser);
 router.route("/loginuser").post(loginUser);
 router.route("/sendemail").post(sendEmailVerification);
-router.route("/redirect").post(redirect);
+router.route("/redirect").get(redirect);
 router.route("/validateemail").post(emailValidation);
+router.route("/googlelogin").get(socialLogin);
 
 router.route("/user/password/reset").post(resetPassword);
 router.route("/user/Password/forgot").put(forgotPassword);

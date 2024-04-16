@@ -2,7 +2,6 @@ const Errorhandler = require("../Utils/errorHandler");
 const catchAsyncErrors = require("../Middleware/catchAsyncError");
 const User = require("../Models/userModel");
 const uuid = require("uuid");
-
 const sendToken = require("../Utils/jwtToken");
 const {
   getClientToken,
@@ -15,6 +14,7 @@ const {
   resetThePassword,
   forgotPassword,
   getUserDetailsByUsername,
+  getTokenforSocialLogin,
 } = require("./clientController");
 const OtpRequests = new Map();
 const tokenList = new Map();
@@ -226,8 +226,26 @@ exports.sendEmailVerification = catchAsyncErrors(async (req, res, next) => {
 
 // Redirect
 exports.redirect = catchAsyncErrors(async (req, res, next) => {
-  // console.log("Redirecting...", req.body);
-  res.send("Redirecting...");
+  const authCode = req.query.code;
+
+  const result = await getTokenforSocialLogin(authCode);
+  const data = await result.json();
+
+  if (result.status == 200) {
+    const jsonData = JSON.stringify(data);
+    res
+      .status(result.status)
+      .redirect(
+        "https://hostpc.com:3000/redirect?status=" +
+          result.status +
+          "&data=" +
+          jsonData
+      );
+  } else {
+    res
+      .status(result.status)
+      .redirect("https://hostpc.com:3000/login?status=" + result.status);
+  }
 });
 
 // Email Validation
@@ -318,8 +336,22 @@ exports.getUserDetailsUsername = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
+// Social login
+exports.socialLogin = catchAsyncErrors(async (req, res, next) => {
+  const clientId = process.env.CLIENT_ID;
+  const redirectUri = process.env.REDIRECT_URI;
+
+  const queryParams = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    create_new_user: "true",
+  });
+
+  // Redirect the user to Google's OAuth dialog with the constructed query parameters
+  await res.redirect(
+    `${process.env.GOOGLE_AUTH_URI}?${queryParams.toString()}`
+  );
+});
+
 // Get Login History
 exports.getLoginHistory = catchAsyncErrors(async (req, res, next) => {});
-
-// Delete User
-exports.deleteUser = catchAsyncErrors(async (req, res, next) => {});

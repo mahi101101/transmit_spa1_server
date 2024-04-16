@@ -19,5 +19,5 @@ process.on("unhandledRejection",err=>{
 dotenv.config({path:"./Config/config.env"});
 
 const server = app.listen(process.env.PORT,()=>{
-    console.log(`Server running on https://hostpc:${process.env.PORT}`);
+    console.log(`Server running on https://hostpc.com:${process.env.PORT}`);
 })

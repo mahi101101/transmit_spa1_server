@@ -174,3 +174,19 @@ exports.getUserDetailsByUsername = async (username, token) => {
 
   return resp;
 };
+
+exports.getTokenforSocialLogin = async (code) => {
+  const resp = await fetch(`${process.env.SOCIALLOGIN_TOKEN_URI}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      client_id: process.env.CLIENT_ID,
+      client_secret: process.env.CLIENT_SECRET,
+      code: code,
+    }),
+  });
+
+  return resp;
+};
