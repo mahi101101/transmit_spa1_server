@@ -93,16 +93,108 @@ exports.validateEmailPasscode = async (token, email, passcode) => {
 
 // Get User By Email
 exports.getUserByEmail = async (token, email) => {
+
+  const resp = await fetch(process.env.USER_DETAILS_BY_EMAIL_URI + `${email}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return resp;
+};
+
+// Get a Reset Token for reset password
+exports.getResetToken = async (username, password) => {
+  const resp = await fetch(`${process.env.RESET_TOKEN_URI}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      password: password,
+      client_id: process.env.CLIENT_ID,
+      username: username,
+    }),
+  });
+
+  return resp;
+};
+
+// reset the password using reset token and new password
+exports.resetThePassword = async (reset_token, new_password) => {
   const resp = await fetch(
-    `https://api.transmitsecurity.io/cis/v1/users/email/${email}`,
+    "https://api.transmitsecurity.io/cis/v1/auth/password/reset",
     {
-      method: "GET",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify({
+        reset_token: reset_token,
+        new_password: new_password,
+      }),
     }
   );
 
   return resp;
 };
+
+// Forgot Pasword
+exports.forgotPassword = async (userId, password, token) => {
+  const resp = await fetch(
+    process.env.USER_PASSWORD_RESET_URI + `${userId}/password`,
+    {
+      method: "PUT",
+
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+
+
+      body: JSON.stringify({
+        password: password,
+        force_replace: false,
+      }),
+    }
+  );
+
+  return resp;
+};
+
+// Get userdetails by username
+exports.getUserDetailsByUsername = async (username, token) => {
+  const resp = await fetch(
+    process.env.USER_DETAILS_BY_USERNAME_URI + `${username}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+
+    }
+  );
+
+  return resp;
+};
+
+
+
+exports.getTokenforSocialLogin = async (code) => {
+  const resp = await fetch(`${process.env.SOCIALLOGIN_TOKEN_URI}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      client_id: process.env.CLIENT_ID,
+      client_secret: process.env.CLIENT_SECRET,
+      code: code,
+    }),
+  });
+
+  return resp;
+};
+
