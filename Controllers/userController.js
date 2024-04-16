@@ -13,12 +13,13 @@ const {
   getUserByEmail,
   getResetToken,
   resetThePassword,
-  getuserdetailsbyusername,
   forgotPassword,
+  getUserDetailsByUsername,
 } = require("./clientController");
 const OtpRequests = new Map();
 const tokenList = new Map();
 const regTokens = new Map();
+const ForgotSession = new Map();
 
 // Register User
 exports.registerUser = catchAsyncErrors(async (req, res, next) => {
@@ -31,8 +32,8 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
   if (tokenList.get("accessToken") !== token) {
     tokenList.set("accessToken", token);
     setTimeout(() => {
-      OtpRequests.delete(email); // Remove the entry from the cache after expiration
-    }, 60 * 60 * 1000);
+      tokenList.delete("accessToken");
+    }, 59 * 60 * 1000);
   }
   const resp = await createTransmitUser(token, new_user);
   const data = await resp.json();
@@ -51,8 +52,7 @@ exports.createRegSession = catchAsyncErrors(async (req, res, next) => {
   if (regTokens.get(email)) {
     res.status(401).json({
       success: false,
-      message:
-        "The user with this mail is already having a session somewhere else please try again.",
+      message: "Unauthorized. Please try again.",
     });
   } else {
     const regtoken = uuid.v4();
@@ -61,11 +61,12 @@ exports.createRegSession = catchAsyncErrors(async (req, res, next) => {
 
     setTimeout(() => {
       regTokens.delete(email);
-    }, 1 * 60 * 1000);
+    }, 60 * 60 * 1000);
 
     res.status(200).json({
       success: true,
       message: "Registration session generated",
+      token: regtoken,
     });
   }
 });
@@ -85,8 +86,8 @@ exports.loginUser = catchAsyncErrors(async (req, res, next) => {
   if (tokenList.get("accessToken") !== token) {
     tokenList.set("accessToken", token);
     setTimeout(() => {
-      OtpRequests.delete(email); // Remove the entry from the cache after expiration
-    }, 60 * 60 * 1000);
+      tokenList.delete("accessToken");
+    }, 59 * 60 * 1000);
   }
 
   const resp = await loginTransmitUser(token, new_user);
@@ -106,7 +107,7 @@ exports.logoutUser = catchAsyncErrors(async (req, res, next) => {});
 
 // Forgot Password
 exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
   const token = tokenList.get("accessToken")
     ? tokenList.get("accessToken")
@@ -114,11 +115,11 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
   if (tokenList.get("accessToken") !== token) {
     tokenList.set("accessToken", token);
     setTimeout(() => {
-      OtpRequests.delete(email); // Remove the entry from the cache after expiration
-    }, 60 * 60 * 1000);
+      tokenList.delete("accessToken");
+    }, 59 * 60 * 1000);
   }
 
-  const userinfo = await getuserdetailsbyusername(username, token);
+  const userinfo = await getUserByEmail(token, email);
   const data = await userinfo.json();
 
   const userId = data.result.user_id;
@@ -127,9 +128,35 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
   const data2 = await resp.json();
 
   if (data2.error_code) {
-    res.status(resp.status).json({ success: false, messege: data2.message });
+    res.status(resp.status).json({ success: false, message: data2.message });
   }
   res.status(resp.status).json({ success: true, message: data2.message });
+});
+
+// Create Session for user pass forgot
+exports.createForgotPassSession = catchAsyncErrors(async (req, res, next) => {
+  const email = req.params.email;
+
+  if (ForgotSession.get(email)) {
+    res.status(401).json({
+      success: false,
+      message: "Unauthorized. Please try again.",
+    });
+  } else {
+    const ForgotSessionToken = uuid.v4();
+
+    ForgotSession.set(email, ForgotSessionToken);
+
+    setTimeout(() => {
+      ForgotSession.delete(email);
+    }, 2 * 60 * 1000);
+
+    res.status(200).json({
+      success: true,
+      message: "Password Reset session generated",
+      token: ForgotSessionToken,
+    });
+  }
 });
 
 // Reset Password
@@ -143,10 +170,9 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
       .status(response.status)
       .json({ success: false, message: data.message });
   }
-  console.log("avdkusafdkugsafd");
+
   const response2 = await resetThePassword(data.result, new_password);
   const data2 = await response2.json();
-  console.log(data2);
 
   if (data2.error_code) {
     res
@@ -176,8 +202,8 @@ exports.sendEmailVerification = catchAsyncErrors(async (req, res, next) => {
   if (tokenList.get("accessToken") !== token) {
     tokenList.set("accessToken", token);
     setTimeout(() => {
-      OtpRequests.delete(email); // Remove the entry from the cache after expiration
-    }, 60 * 60 * 1000);
+      tokenList.delete("accessToken");
+    }, 59 * 60 * 1000);
   }
 
   setTimeout(() => {
@@ -217,13 +243,13 @@ exports.emailValidation = catchAsyncErrors(async (req, res, next) => {
   if (tokenList.get("accessToken") !== token) {
     tokenList.set("accessToken", token);
     setTimeout(() => {
-      OtpRequests.delete(email); // Remove the entry from the cache after expiration
-    }, 60 * 60 * 1000);
+      tokenList.delete("accessToken");
+    }, 59 * 60 * 1000);
   }
   const resp = await validateEmailPasscode(token, email, passcode);
   const data = await resp.json();
 
-  console.log(data);
+  // console.log(data);
   if (data.error_code) {
     res
       .status(data.error_code)
@@ -241,13 +267,13 @@ exports.getUserDetailsEmail = catchAsyncErrors(async (req, res, next) => {
   if (tokenList.get("accessToken") !== token) {
     tokenList.set("accessToken", token);
     setTimeout(() => {
-      OtpRequests.delete(email); // Remove the entry from the cache after expiration
-    }, 60 * 60 * 1000);
+      tokenList.delete("accessToken");
+    }, 59 * 60 * 1000);
   }
   const resp = await getUserByEmail(token, email);
   const data = await resp.json();
 
-  if (resp.status === 404) {
+  if (resp.status === 404 || resp.status === 400) {
     res.status(resp.status).json({
       success: false,
       message: "Could not fetch User Details",
@@ -263,7 +289,34 @@ exports.getUserDetailsEmail = catchAsyncErrors(async (req, res, next) => {
 });
 
 // Get User Details - username
-exports.getUserDetailsUsername = catchAsyncErrors(async (req, res, next) => {});
+exports.getUserDetailsUsername = catchAsyncErrors(async (req, res, next) => {
+  const username = req.params.username;
+  const token = tokenList.get("accessToken")
+    ? tokenList.get("accessToken")
+    : await getClientToken();
+  if (tokenList.get("accessToken") !== token) {
+    tokenList.set("accessToken", token);
+    setTimeout(() => {
+      tokenList.delete("accessToken");
+    }, 59 * 60 * 1000);
+  }
+  const resp = await getUserDetailsByUsername(username, token);
+  const data = await resp.json();
+
+  if (resp.status === 404 || resp.status === 400) {
+    res.status(resp.status).json({
+      success: false,
+      message: "Could not fetch User Details",
+      message: data.message,
+    });
+  }
+
+  res.status(resp.status).json({
+    success: true,
+    message: "Fetched User Details Successfully",
+    data,
+  });
+});
 
 // Get Login History
 exports.getLoginHistory = catchAsyncErrors(async (req, res, next) => {});

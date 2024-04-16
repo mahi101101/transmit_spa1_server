@@ -93,16 +93,13 @@ exports.validateEmailPasscode = async (token, email, passcode) => {
 
 // Get User By Email
 exports.getUserByEmail = async (token, email) => {
-  const resp = await fetch(
-    `https://api.transmitsecurity.io/cis/v1/users/email/${email}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  const resp = await fetch(process.env.USER_DETAILS_BY_EMAIL_URI + `${email}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
   return resp;
 };
@@ -145,7 +142,6 @@ exports.resetThePassword = async (reset_token, new_password) => {
 
 // Forgot Pasword
 exports.forgotPassword = async (userId, password, token) => {
-
   const resp = await fetch(
     process.env.USER_PASSWORD_RESET_URI + `${userId}/password`,
     {
@@ -160,12 +156,12 @@ exports.forgotPassword = async (userId, password, token) => {
       }),
     }
   );
-    
+
   return resp;
 };
 
 // Get userdetails by username
-exports.getuserdetailsbyusername = async (username, token) => {
+exports.getUserDetailsByUsername = async (username, token) => {
   const resp = await fetch(
     process.env.USER_DETAILS_BY_USERNAME_URI + `${username}`,
     {
@@ -175,6 +171,6 @@ exports.getuserdetailsbyusername = async (username, token) => {
       },
     }
   );
-    
+
   return resp;
 };
