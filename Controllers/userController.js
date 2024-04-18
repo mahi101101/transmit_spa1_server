@@ -15,8 +15,10 @@ const {
   forgotPassword,
   getUserDetailsByUsername,
   getTokenforSocialLogin,
+
   sendEmailVerificationClientBe,
   validateEmailPasscodeBe,
+
 } = require("./clientController");
 const OtpRequests = new Map();
 const tokenList = new Map();
@@ -26,6 +28,7 @@ const loginSession = new Map();
 
 // Register User
 exports.registerUser = catchAsyncErrors(async (req, res, next) => {
+
   const new_user = new User(req.body);
   await new_user.validate();
 
@@ -38,6 +41,7 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
       tokenList.delete("accessToken");
     }, 59 * 60 * 1000);
   }
+
   const resp = await createTransmitUser(token, new_user);
   const data = await resp.json();
 

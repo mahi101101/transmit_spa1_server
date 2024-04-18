@@ -93,6 +93,7 @@ exports.validateEmailPasscode = async (token, email, passcode) => {
 
 // Get User By Email
 exports.getUserByEmail = async (token, email) => {
+
   const resp = await fetch(process.env.USER_DETAILS_BY_EMAIL_URI + `${email}`, {
     method: "GET",
     headers: {
@@ -146,10 +147,13 @@ exports.forgotPassword = async (userId, password, token) => {
     process.env.USER_PASSWORD_RESET_URI + `${userId}/password`,
     {
       method: "PUT",
+
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
+
+
       body: JSON.stringify({
         password: password,
         force_replace: false,
@@ -169,11 +173,14 @@ exports.getUserDetailsByUsername = async (username, token) => {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+
     }
   );
 
   return resp;
 };
+
+
 
 exports.getTokenforSocialLogin = async (code) => {
   const resp = await fetch(`${process.env.SOCIALLOGIN_TOKEN_URI}`, {
@@ -190,6 +197,7 @@ exports.getTokenforSocialLogin = async (code) => {
 
   return resp;
 };
+
 
 // send email verification mail Backend
 exports.sendEmailVerificationClientBe = async (token, username) => {
@@ -233,3 +241,4 @@ exports.validateEmailPasscodeBe = async (
 };
 
 // redirect_uri: "http://hostpc:3000/login/redirect/email/otp",
+

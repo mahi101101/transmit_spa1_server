@@ -40,4 +40,6 @@ router
   .route("/user/password/forgot/getsession/:email")
   .get(createForgotPassSession);
 
+router.route("/user/details/email/:mail").get(getUserDetailsEmail);
+
 module.exports = router;
