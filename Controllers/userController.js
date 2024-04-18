@@ -16,11 +16,15 @@ const {
   getUserDetailsByUsername,
   getTokenforSocialLogin,
 
+  sendEmailVerificationClientBe,
+  validateEmailPasscodeBe,
+
 } = require("./clientController");
 const OtpRequests = new Map();
 const tokenList = new Map();
 const regTokens = new Map();
 const ForgotSession = new Map();
+const loginSession = new Map();
 
 // Register User
 exports.registerUser = catchAsyncErrors(async (req, res, next) => {
@@ -230,10 +234,10 @@ exports.sendEmailVerification = catchAsyncErrors(async (req, res, next) => {
 // Redirect
 exports.redirect = catchAsyncErrors(async (req, res, next) => {
   const authCode = req.query.code;
-
+  // console.log(authCode);
   const result = await getTokenforSocialLogin(authCode);
   const data = await result.json();
-
+  // console.log(data);
   if (result.status == 200) {
     const jsonData = JSON.stringify(data);
     res
@@ -343,17 +347,132 @@ exports.getUserDetailsUsername = catchAsyncErrors(async (req, res, next) => {
 exports.socialLogin = catchAsyncErrors(async (req, res, next) => {
   const clientId = process.env.CLIENT_ID;
   const redirectUri = process.env.REDIRECT_URI;
-
+  const jsonString = JSON.stringify({
+    id_token: { roles: null },
+    userinfo: { phone_numeber: null, email: null },
+  });
   const queryParams = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
     create_new_user: "true",
+    claims: jsonString,
   });
 
   // Redirect the user to Google's OAuth dialog with the constructed query parameters
   await res.redirect(
     `${process.env.GOOGLE_AUTH_URI}?${queryParams.toString()}`
   );
+});
+
+// Login User MFA
+exports.loginUserMFA = catchAsyncErrors(async (req, res, next) => {
+  const { username, password } = req.body;
+
+  const new_user = {
+    username: username,
+    password: password,
+  };
+
+  const token = tokenList.get("accessToken")
+    ? tokenList.get("accessToken")
+    : await getClientToken();
+  if (tokenList.get("accessToken") !== token) {
+    tokenList.set("accessToken", token);
+    setTimeout(() => {
+      tokenList.delete("accessToken");
+    }, 59 * 60 * 1000);
+  }
+
+  const resp = await loginTransmitUser(token, new_user);
+
+  const data = await resp.json();
+
+  if (data.error_code === 401) {
+    res.status(resp.status).json({ success: false, message: data.message });
+  } else {
+    loginSession.set(username, data);
+
+    setTimeout(() => {
+      tokenList.delete("accessToken");
+    }, 10 * 60 * 1000);
+    res
+      .status(resp.status)
+      .json({ success: true, message: "Forwarding to OTP verification", data });
+  }
+});
+
+//Send OTP - multiple
+exports.sendOtp = catchAsyncErrors(async (req, res, next) => {
+  const { username } = req.body;
+
+  if (OtpRequests.has(username)) {
+    return res.status(429).json({
+      success: false,
+      message: "Please wait before requesting another OTP",
+    });
+  }
+
+  const token = tokenList.get("accessToken")
+    ? tokenList.get("accessToken")
+    : await getClientToken();
+  if (tokenList.get("accessToken") !== token) {
+    tokenList.set("accessToken", token);
+    setTimeout(() => {
+      tokenList.delete("accessToken");
+    }, 59 * 60 * 1000);
+  }
+
+  const resp = await sendEmailVerificationClientBe(token, username);
+  const data = await resp.json();
+
+  // console.log("Email sent: ", data);
+
+  if (!resp.ok) {
+    res
+      .status(resp.status)
+      .json({ success: false, message: "Error sending email" });
+  }
+
+  OtpRequests.set(username, Date.now());
+  setTimeout(() => {
+    OtpRequests.delete(username); // Remove the entry from the cache after expiration
+  }, 2 * 60 * 1000);
+
+  res.status(resp.status).json({ success: true, message: data.message });
+});
+
+// Email Validation
+exports.validateOtp = catchAsyncErrors(async (req, res, next) => {
+  const { username, passcode } = req.body;
+  if (!passcode) {
+    return new Errorhandler("Passcode is important", 400);
+  }
+  const token = tokenList.get("accessToken")
+    ? tokenList.get("accessToken")
+    : await getClientToken();
+  if (tokenList.get("accessToken") !== token) {
+    tokenList.set("accessToken", token);
+    setTimeout(() => {
+      tokenList.delete("accessToken");
+    }, 59 * 60 * 1000);
+  }
+
+  const userSession = loginSession.get(username);
+  const sessionId = userSession.session_id;
+  const resp = await validateEmailPasscodeBe(
+    token,
+    username,
+    passcode,
+    sessionId
+  );
+  const data = await resp.json();
+
+  if (data.error_code) {
+    res
+      .status(data.error_code)
+      .json({ message: "OTP Validation Failed", data });
+  }
+  res.status(200).json({ message: "Logging you In...", data });
 });
 
 // Get Login History

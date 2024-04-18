@@ -12,6 +12,9 @@ const {
   getUserDetailsUsername,
   createForgotPassSession,
   socialLogin,
+  sendOtp,
+  validateOtp,
+  loginUserMFA,
 } = require("../Controllers/userController");
 
 const router = express();
@@ -19,9 +22,12 @@ const router = express();
 // Routes
 router.route("/registeruser").post(registerUser);
 router.route("/loginuser").post(loginUser);
+router.route("/loginusermfa").post(loginUserMFA);
 router.route("/sendemail").post(sendEmailVerification);
+router.route("/sendotpbe").post(sendOtp);
 router.route("/redirect").get(redirect);
 router.route("/validateemail").post(emailValidation);
+router.route("/validateotpbe").post(validateOtp);
 router.route("/googlelogin").get(socialLogin);
 
 router.route("/user/password/reset").post(resetPassword);
