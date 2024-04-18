@@ -36,7 +36,7 @@ exports.createTransmitUser = async (token, user) => {
 
 // user login
 exports.loginTransmitUser = async (token, user) => {
-  const resp = await fetch(process.env.LOGIN_URI, {
+  const resp = await fetch(process.env.LOGIN_URI_BE, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -190,3 +190,46 @@ exports.getTokenforSocialLogin = async (code) => {
 
   return resp;
 };
+
+// send email verification mail Backend
+exports.sendEmailVerificationClientBe = async (token, username) => {
+  const resp = await fetch(process.env.BACKEND_OTP_SEND, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      channel: "email",
+      identifier: username,
+      identifier_type: "username",
+    }),
+  });
+  return resp;
+};
+
+// Validate email Passcode Backend
+exports.validateEmailPasscodeBe = async (
+  token,
+  username,
+  passcode,
+  sessionId
+) => {
+  const resp = await fetch(process.env.BACKEND_OTP_VERIFICATION, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      identifier: username,
+      identifier_type: "username",
+      passcode: passcode,
+      session_id: sessionId,
+    }),
+  });
+
+  return resp;
+};
+
+// redirect_uri: "http://hostpc:3000/login/redirect/email/otp",
